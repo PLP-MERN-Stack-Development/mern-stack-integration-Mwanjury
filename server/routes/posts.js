@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import postController from '../controllers/postController.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { upload } from '../utils/upload.js';
+
 const router = express.Router();
-const postController = require('../controllers/postController');
-const { protect } = require('../middleware/authMiddleware');
-const { upload } = require('../utils/upload');
 
 router.get('/', postController.getPosts);
 router.get('/:id', postController.getPost);
@@ -13,4 +14,4 @@ router.delete('/:id', protect, postController.deletePost);
 
 router.post('/:id/comments', protect, postController.addComment);
 
-module.exports = router;
+export default router;
