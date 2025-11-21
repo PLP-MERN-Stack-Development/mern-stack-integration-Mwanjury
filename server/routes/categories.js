@@ -1,9 +1,11 @@
-const express = require('express');
+import express from 'express';
+import categoryController from '../controllers/categoryController.js';
+import { protect } from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const categoryController = require('../controllers/categoryController');
-const { protect } = require('../middleware/authMiddleware');
 
 router.get('/', categoryController.getCategories);
 router.post('/', protect, categoryController.createCategory);
 
-module.exports = router;
+export default router;
+
