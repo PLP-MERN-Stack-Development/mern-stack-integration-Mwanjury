@@ -1,13 +1,16 @@
-const Post = require('../models/Post');
-const Category = require('../models/Category');
-const { validationResult } = require('express-validator');
+import Post from '../models/Post.js';
+import Category from '../models/Category.js';
+import { validationResult } from 'express-validator';
 
 // GET /api/posts
-exports.getPosts = async (req, res, next) => {
+export const getPosts = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, search = '', category } = req.query;
     const q = {};
-    if (search) q.$or = [{ title: { $regex: search, $options: 'i' } }, { body: { $regex: search, $options: 'i' } }];
+    if (search) q.$or = [
+      { title: { $regex: search, $options: 'i' } },
+      { body: { $regex: search, $options: 'i' } }
+    ];
     if (category) q.categories = category;
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -24,7 +27,7 @@ exports.getPosts = async (req, res, next) => {
 };
 
 // GET /api/posts/:id
-exports.getPost = async (req, res, next) => {
+export const getPost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id)
       .populate('author', 'name email')
@@ -36,9 +39,8 @@ exports.getPost = async (req, res, next) => {
 };
 
 // POST /api/posts
-exports.createPost = async (req, res, next) => {
+export const createPost = async (req, res, next) => {
   try {
-    // basic validation
     const { title, body, categories } = req.body;
     if (!title || !body) return res.status(400).json({ message: 'Title and body required' });
 
@@ -49,15 +51,12 @@ exports.createPost = async (req, res, next) => {
       excerpt: (body || '').slice(0, 200)
     };
 
-    // categories may be sent as array or CSV
     if (categories) {
       let cats = categories;
       if (typeof categories === 'string') {
-        // supports categories[]=id or comma separated
         if (categories.includes(',')) cats = categories.split(',').map(c => c.trim());
         else cats = [categories];
       }
-      // validate category ids optionally: ensure exist
       postData.categories = cats;
     }
 
@@ -66,18 +65,20 @@ exports.createPost = async (req, res, next) => {
     }
 
     const post = await Post.create(postData);
-    const populated = await Post.findById(post._id).populate('author', 'name').populate('categories', 'name');
+    const populated = await Post.findById(post._id)
+      .populate('author', 'name')
+      .populate('categories', 'name');
+
     res.status(201).json(populated);
   } catch (err) { next(err); }
 };
 
 // PUT /api/posts/:id
-exports.updatePost = async (req, res, next) => {
+export const updatePost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
 
-    // optional: only author or admin can update
     if (String(post.author) !== String(req.user._id) && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to update' });
     }
@@ -100,13 +101,16 @@ exports.updatePost = async (req, res, next) => {
     if (req.file) post.featuredImage = `/uploads/${req.file.filename}`;
 
     await post.save();
-    const updated = await Post.findById(post._id).populate('author', 'name').populate('categories', 'name');
+    const updated = await Post.findById(post._id)
+      .populate('author', 'name')
+      .populate('categories', 'name');
+
     res.json(updated);
   } catch (err) { next(err); }
 };
 
 // DELETE /api/posts/:id
-exports.deletePost = async (req, res, next) => {
+export const deletePost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
@@ -121,7 +125,7 @@ exports.deletePost = async (req, res, next) => {
 };
 
 // POST /api/posts/:id/comments
-exports.addComment = async (req, res, next) => {
+export const addComment = async (req, res, next) => {
   try {
     const { text } = req.body;
     if (!text) return res.status(400).json({ message: 'Comment text required' });
@@ -133,7 +137,6 @@ exports.addComment = async (req, res, next) => {
     post.comments.push(comment);
     await post.save();
 
-    // return latest comment populated
     const last = post.comments[post.comments.length - 1];
     res.status(201).json(last);
   } catch (err) { next(err); }
