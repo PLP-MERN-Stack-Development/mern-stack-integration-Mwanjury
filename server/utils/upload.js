@@ -1,9 +1,13 @@
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 
 const uploadsDir = process.env.UPLOADS_DIR || 'uploads';
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+// Create uploads folder if missing
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -15,6 +19,4 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
-
-module.exports = { upload };
+export const upload = multer({ storage });
